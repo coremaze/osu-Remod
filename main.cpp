@@ -67,7 +67,7 @@ int main(int argc, char * argv[]) {
       }
     }
 
-    for (int i = 0; i <= 4; i++) {
+    for (int i = 0; i <= 3; i++) {
       array[0x5E + nameLen + i] = modByte[i];
     }
     cout << "Data has been read. Now writing to output file:" << endl;
