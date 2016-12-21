@@ -64,7 +64,6 @@ int main(int argc, char * argv[]) {
             j=j-1;
         }
         modByte[j] = modByte[j] + pow(0x2, (i - 0x1 - 8 * j));
-        if(setMods[8]){cout<<"rx should be enabled\n";}
       }
     }
 
