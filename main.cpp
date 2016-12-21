@@ -9,6 +9,7 @@ using namespace std;
 bool file_exists(string filename);
 int get_file_size(string filename);
 bool validOsr(string fin);
+bool makeMods(bool setMods[], char * argv[]);
 int main(int argc, char * argv[]) {
   if (argc < 3) {
     cout << "Usage: osu!Remod.exe <input OSR file> <output OSR file> ( NF | EZ | NV | HD | HR | SD | DT | RX | HT | NC | FL | AUTO | SO | AP | PF | 1K | 2K | 3K | 4K | 5K | 6K | 7K | 8K | 9K | FI | RD | Cinema | TP | COOP )" << endl;
@@ -39,7 +40,90 @@ int main(int argc, char * argv[]) {
     setMods[i] = 0;
   }
 
-  for (int i = 3; argv[i] != NULL; i++) {
+  makeMods(setMods, argv);
+
+
+  char * array = new char[get_file_size(argv[1])];
+  int position = 0;
+  ifstream fin(argv[1], ios_base:: in | ios_base::binary);
+  if (fin.is_open()) {
+
+    cout << "Reading file..." << endl;
+
+    while (position < osrSize + 2) {
+      fin.get(array[position]);
+      position++;
+    }
+    int nameLen = array[0x28];
+
+    int modByte[4] = {0,0,0,0};
+    for (int i = 1; i <= numberOfMods; i++) {
+      if (setMods[i]) {
+        int j = ceil(i / 8);
+        if(i%8==0){
+            j=j-1;
+        }
+        modByte[j] = modByte[j] + pow(0x2, (i - 0x1 - 8 * j));
+        if(setMods[8]){cout<<"rx should be enabled\n";}
+      }
+    }
+
+    for (int i = 0; i <= 4; i++) {
+      array[0x5E + nameLen + i] = modByte[i];
+    }
+    cout << "Data has been read. Now writing to output file:" << endl;
+
+    ofstream out(argv[2], ios_base::out | ios_base::binary);
+    cout << argv[2] << endl;
+    if (!out) {
+      cout << "Cannot open output file\n";
+      return 1;
+    }
+
+    out.write((char * ) array, position - 2);
+    out.close();
+    cout << "Done!" << endl;
+
+  }
+
+  return 0;
+}
+int get_file_size(string filename) {
+  FILE * p_file = NULL;
+  p_file = fopen(filename.c_str(), "rb");
+  fseek(p_file, 0, SEEK_END);
+  int size = ftell(p_file);
+  fclose(p_file);
+  return size;
+}
+bool file_exists(string filename) {
+  ifstream in (filename.c_str(), ios_base:: in | ios_base::binary);
+  if ( in .is_open()) { in .close();
+    return 1;
+  } else {
+    return 0;
+  }
+
+}
+bool validOsr(string fin) {
+  if (!file_exists(fin)) {
+    cout << "Error: " << fin << " does not exist or I don't have read permission.\n";
+    return 0;
+  }
+  cout << "Size of file: " << get_file_size(fin) << endl;
+  if (get_file_size(fin) < 1) {
+    cout << "There's no data here! What are you trying to do to me?!?" << endl;
+    return 0;
+  } else {
+    if (get_file_size(fin) < 94) {
+      cout << "That wasn't big enough to be an OSR file..." << endl;
+      return 0;
+    }
+  }
+  return 1;
+}
+bool makeMods(bool setMods[], char * argv[]){
+      for (int i = 3; argv[i] != NULL; i++) {
     if (!strcmp(argv[i], "NF") || !strcmp(argv[i], "nf")) {
       setMods[1] = 1;
     } else if (!strcmp(argv[i], "EZ") || !strcmp(argv[i], "ez")) {
@@ -100,80 +184,5 @@ int main(int argc, char * argv[]) {
       setMods[29] = 1;
     }
   }
-
-  char * array = new char[get_file_size(argv[1])];
-  int position = 0;
-  ifstream fin(argv[1], ios_base:: in | ios_base::binary);
-  if (fin.is_open()) {
-
-    cout << "Reading file..." << endl;
-
-    while (position < osrSize + 2) {
-      fin.get(array[position]);
-      position++;
-    }
-    int nameLen = array[0x28];
-
-    int modByte[4] = {0,0,0,0};
-    for (int i = 1; i <= numberOfMods; i++) {
-      if (setMods[i]) {
-        int j = ceil(i / 8);
-        modByte[j] = modByte[j] + pow(0x2, (i - 0x1 - 8 * j));
-
-      }
-    }
-
-    for (int i = 0; i <= 4; i++) {
-      array[0x5E + nameLen + i] = modByte[i];
-    }
-    cout << "Data has been read. Now writing to output file:" << endl;
-
-    ofstream out(argv[2], ios_base::out | ios_base::binary);
-    cout << argv[2] << endl;
-    if (!out) {
-      cout << "Cannot open output file\n";
-      return 1;
-    }
-
-    out.write((char * ) array, position - 2);
-    out.close();
-    cout << "Done!" << endl;
-
-  }
-
-  return 0;
-}
-int get_file_size(string filename) {
-  FILE * p_file = NULL;
-  p_file = fopen(filename.c_str(), "rb");
-  fseek(p_file, 0, SEEK_END);
-  int size = ftell(p_file);
-  fclose(p_file);
-  return size;
-}
-bool file_exists(string filename) {
-  ifstream in (filename.c_str(), ios_base:: in | ios_base::binary);
-  if ( in .is_open()) { in .close();
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-bool validOsr(string fin) {
-  if (!file_exists(fin)) {
-    cout << "Error: " << fin << " does not exist or I don't have read permission.\n";
-    return 0;
-  }
-  cout << "Size of file: " << get_file_size(fin) << endl;
-  if (get_file_size(fin) < 1) {
-    cout << "There's no data here! What are you trying to do to me?!?" << endl;
-    return 0;
-  } else {
-    if (get_file_size(fin) < 94) {
-      cout << "That wasn't big enough to be an OSR file..." << endl;
-      return 0;
-    }
-  }
-  return 1;
+  return setMods;
 }
