@@ -2,6 +2,8 @@
 Allows you to change mods on osu! replays.
 Usage: osu!Remod.exe <Usage: osu!Remod.exe <input OSR file> <output OSR file> (Mods)
 
+Disclaimer: This is not affiliated affiliated with osu! or ppy.
+
 You can specify as many mods as you want, and here are their abbreviations:
 
 Nofail: NF
